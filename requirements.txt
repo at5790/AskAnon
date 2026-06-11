@@ -1,0 +1,5 @@
+fastapi           # backend web framework
+uvicorn           # runs the FastAPI server
+sqlalchemy        # connects Python to SQLite database
+jinja2            # lets FastAPI render HTML pages
+python-multipart  # lets forms/file uploads work later

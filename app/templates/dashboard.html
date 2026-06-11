@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - AskAnon</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>{{ session.title }}</h1>
+
+    <p>Join Code:</p>
+    <h2>{{ session.join_code }}</h2>
+
+    <p>Students will use this code to join the session.</p>
+
+    <br>
+    <a href="/professor">Create Another Session</a>
+    <a href="/">Home</a>
+</body>
+</html>
