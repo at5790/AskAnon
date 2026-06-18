@@ -145,10 +145,17 @@ def student_session(
             {"message": "Session not found."}
         )
 
+    questions = db.query(Question).filter(
+        Question.session_id == session.id
+    ).order_by(Question.upvotes.desc()).all()
+
     return templates.TemplateResponse(
         request,
         "student_session.html",
-        {"session": session}
+        {
+            "session": session,
+            "questions": questions
+        }
     )
 
 @app.post("/ask-question")
@@ -203,6 +210,6 @@ def upvote_question(
     ).first()
 
     return RedirectResponse(
-        url=f"/dashboard/{session.join_code}",
+        url=f"/student/session/{session.join_code}",
         status_code=303
     )
