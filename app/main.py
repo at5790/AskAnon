@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from .database import engine, get_db
-from .models import Base, ClassSession
+from .models import Base, ClassSession, Question
 
 import random
 import string
@@ -79,10 +79,25 @@ def dashboard(
             {"message": "Session not found."}
         )
 
+    questions = db.query(Question).filter(
+        Question.session_id == session.id
+    ).order_by(Question.upvotes.desc()).all()
+
+    total_questions = len(questions)
+
+    total_upvotes = 0
+    for question in questions:
+        total_upvotes += question.upvotes
+
     return templates.TemplateResponse(
         request,
         "dashboard.html",
-        {"session": session}
+        {
+            "session": session,
+            "questions": questions,
+            "total_questions": total_questions,
+            "total_upvotes": total_upvotes
+        }
     )
 
 @app.get("/student")
@@ -113,7 +128,6 @@ def join_session(
         status_code=303
     )
 
-
 @app.get("/student/session/{join_code}")
 def student_session(
     join_code: str,
@@ -135,4 +149,60 @@ def student_session(
         request,
         "student_session.html",
         {"session": session}
+    )
+
+@app.post("/ask-question")
+def ask_question(
+    join_code: str = Form(...),
+    text: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    session = db.query(ClassSession).filter(
+        ClassSession.join_code == join_code
+    ).first()
+
+    if session is None:
+        return RedirectResponse(
+            url="/student?error=Invalid join code. Please try again.",
+            status_code=303
+        )
+
+    new_question = Question(
+        text=text,
+        session_id=session.id
+    )
+
+    db.add(new_question)
+    db.commit()
+
+    return RedirectResponse(
+        url=f"/student/session/{session.join_code}",
+        status_code=303
+    )
+
+@app.post("/upvote/{question_id}")
+def upvote_question(
+    question_id: int,
+    db: Session = Depends(get_db)
+):
+    question = db.query(Question).filter(
+        Question.id == question_id
+    ).first()
+
+    if question is None:
+        return RedirectResponse(
+            url="/",
+            status_code=303
+        )
+
+    question.upvotes += 1
+    db.commit()
+
+    session = db.query(ClassSession).filter(
+        ClassSession.id == question.session_id
+    ).first()
+
+    return RedirectResponse(
+        url=f"/dashboard/{session.join_code}",
+        status_code=303
     )

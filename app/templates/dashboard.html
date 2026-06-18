@@ -5,15 +5,41 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+    <div class="container">
     <h1>{{ session.title }}</h1>
 
     <p>Join Code:</p>
     <h2>{{ session.join_code }}</h2>
 
+    <h2>Dashboard Stats</h2>
+
+    <p>Total Questions: {{ total_questions }}</p>
+    <p>Total Upvotes: {{ total_upvotes }}</p>
+
     <p>Students will use this code to join the session.</p>
+
+    <h2>Questions</h2>
+
+    {% if questions %}
+        {% for question in questions %}
+            <div class="question-card">
+                <p>{{ question.text }}</p>
+                <p>Upvotes: {{ question.upvotes }}</p>
+            
+                <form method="post" action="/upvote/{{ question.id }}">
+                    <button type="submit">Upvote</button>
+                </form>
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No questions yet.</p>
+    {% endif %}
 
     <br>
     <a href="/professor">Create Another Session</a>
     <a href="/">Home</a>
+
+    </div>
 </body>
 </html>

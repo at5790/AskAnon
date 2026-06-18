@@ -3,18 +3,64 @@ body {
     background: #f4f6f8;
     margin: 0;
     padding: 40px;
-}
-
-h1 {
     color: #1f2937;
 }
 
-a {
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+    color: #111827;
+}
+
+h2 {
+    color: #1f2937;
+}
+
+a, button {
     display: inline-block;
+    margin-top: 10px;
     margin-right: 12px;
     padding: 10px 16px;
     background: #2563eb;
     color: white;
     text-decoration: none;
+    border: none;
     border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover, a:hover {
+    background: #1d4ed8;
+}
+
+input, textarea {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+textarea {
+    height: 100px;
+}
+
+.question-card, .stat-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+}
+
+.error {
+    color: red;
 }

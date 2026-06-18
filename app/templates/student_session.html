@@ -5,15 +5,26 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+    <div class="container">
     <h1>{{ session.title }}</h1>
 
     <p>You joined session:</p>
     <h2>{{ session.join_code }}</h2>
 
-    <p>Question form will go here later.</p>
+    <form method="post" action="/ask-question">
+        <input type="hidden" name="join_code" value="{{ session.join_code }}">
+    
+        <label for="text">Ask a question anonymously:</label>
+        <br>
+        <textarea id="text" name="text" required></textarea>
+        <br><br>
+    
+        <button type="submit">Submit Question</button>
+    </form>
 
     <br>
     <a href="/student">Join Another Session</a>
     <a href="/">Home</a>
+    </div>      
 </body>
 </html>
