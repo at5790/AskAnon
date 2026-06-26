@@ -16,6 +16,29 @@ app = FastAPI()
 
 templates = Jinja2Templates(directory="app/templates")
 
+def get_voted_question_ids(request: Request):
+    voted_cookie = request.cookies.get("voted_questions", "")
+
+    voted_ids = set()
+
+    for item in voted_cookie.split(","):
+        if item.isdigit():
+            voted_ids.add(int(item))
+
+    return voted_ids
+
+
+def save_voted_question_ids(response: RedirectResponse, voted_ids):
+    cookie_value = ",".join(str(question_id) for question_id in sorted(voted_ids))
+
+    response.set_cookie(
+        key="voted_questions",
+        value=cookie_value,
+        max_age=60 * 60 * 24 * 30,
+        httponly=True,
+        samesite="lax"
+    )
+
 def generate_join_code():
     letters_and_numbers = string.ascii_uppercase + string.digits
     code = ""
@@ -24,6 +47,29 @@ def generate_join_code():
         code += random.choice(letters_and_numbers)
 
     return code
+
+def get_my_question_ids(request: Request):
+    my_questions_cookie = request.cookies.get("my_questions", "")
+
+    my_question_ids = set()
+
+    for item in my_questions_cookie.split(","):
+        if item.isdigit():
+            my_question_ids.add(int(item))
+
+    return my_question_ids
+
+
+def save_my_question_ids(response: RedirectResponse, my_question_ids):
+    cookie_value = ",".join(str(question_id) for question_id in sorted(my_question_ids))
+
+    response.set_cookie(
+        key="my_questions",
+        value=cookie_value,
+        max_age=60 * 60 * 24 * 30,
+        httponly=True,
+        samesite="lax"
+    )
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -149,21 +195,29 @@ def student_session(
         Question.session_id == session.id
     ).order_by(Question.upvotes.desc()).all()
 
+    voted_ids = get_voted_question_ids(request)
+    my_question_ids = get_my_question_ids(request)
+
     return templates.TemplateResponse(
         request,
         "student_session.html",
         {
             "session": session,
-            "questions": questions
+            "questions": questions,
+            "voted_ids": voted_ids,
+            "my_question_ids": my_question_ids
+
         }
     )
 
 @app.post("/ask-question")
 def ask_question(
+    request: Request,
     join_code: str = Form(...),
     text: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    
     session = db.query(ClassSession).filter(
         ClassSession.join_code == join_code
     ).first()
@@ -181,15 +235,24 @@ def ask_question(
 
     db.add(new_question)
     db.commit()
+    db.refresh(new_question)
 
-    return RedirectResponse(
+    my_question_ids = get_my_question_ids(request)
+    my_question_ids.add(new_question.id)
+
+    response = RedirectResponse(
         url=f"/student/session/{session.join_code}",
         status_code=303
     )
 
+    save_my_question_ids(response, my_question_ids)
+
+    return response
+
 @app.post("/upvote/{question_id}")
 def upvote_question(
     question_id: int,
+    request: Request, 
     db: Session = Depends(get_db)
 ):
     question = db.query(Question).filter(
@@ -202,14 +265,23 @@ def upvote_question(
             status_code=303
         )
 
-    question.upvotes += 1
-    db.commit()
-
     session = db.query(ClassSession).filter(
         ClassSession.id == question.session_id
     ).first()
 
-    return RedirectResponse(
+    voted_ids = get_voted_question_ids(request)
+    my_question_ids = get_my_question_ids(request)
+
+    if question.id not in voted_ids and question.id not in my_question_ids:
+        question.upvotes += 1
+        db.commit()
+        voted_ids.add(question.id)
+
+    response = RedirectResponse(
         url=f"/student/session/{session.join_code}",
         status_code=303
     )
+
+    save_voted_question_ids(response, voted_ids)
+
+    return response

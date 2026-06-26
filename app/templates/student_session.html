@@ -30,9 +30,15 @@
                 <p>{{ question.text }}</p>
                 <p>Upvotes: {{ question.upvotes }}</p>
 
-                <form method="post" action="/upvote/{{ question.id }}">
-                    <button type="submit">Upvote</button>
-                </form>
+                {% if question.id in my_question_ids %}
+                    <button class="disabled-button" disabled>Your question</button>
+                {% elif question.id in voted_ids %}
+                    <button class="disabled-button" disabled>Already upvoted</button>
+                {% else %}
+                    <form method="post" action="/upvote/{{ question.id }}">
+                        <button type="submit">Upvote</button>
+                    </form>
+                {% endif %}
             </div>
         {% endfor %}
     {% else %}
